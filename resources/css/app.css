@@ -1,0 +1,11 @@
+
+
+/* Base App Styles (BEM, no framework) */
+html, body { margin: 0; padding: 0; }
+.app { padding: 12px; }
+.app__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.app__title { margin: 0; font-size: 20px; }
+.nav { display: flex; gap: 10px; }
+.nav__link { color: #2f6fed; text-decoration: none; padding: 4px 6px; border-radius: 4px; }
+.nav__link.router-link-active { background: #e8efff; }
+.app__content { min-height: 200px; }

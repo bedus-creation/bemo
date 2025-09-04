@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,7 +14,10 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->string('subject');
             $table->text('body');
-            // Using enum with SQLite will create a TEXT column with a check constraint in Laravel
+            $table->foreignId('ticket_category_id')
+                ->nullable()
+                ->constrained('ticket_categories')
+                ->nullOnDelete();
             $table->enum('status', ['open', 'pending', 'closed'])->default('open');
             $table->timestamps();
         });

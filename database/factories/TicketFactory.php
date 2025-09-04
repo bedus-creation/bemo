@@ -16,10 +16,8 @@ class TicketFactory extends Factory
     {
         return [
             'subject' => $this->faker->sentence(6),
-            'body' => $this->faker->paragraphs(3, true),
-            'status' => $this->faker->randomElement(['open', 'pending', 'closed']),
-            // Some tickets should have notes
-            'note' => $this->faker->optional(0.4)->paragraph(),
+            'body'    => $this->faker->paragraphs(3, true),
+            'status'  => $this->faker->randomElement(['open', 'pending', 'closed']),
         ];
     }
 }

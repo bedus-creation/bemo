@@ -7,7 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTicketRequest;
 use App\Http\Requests\UpdateTicketRequest;
 use App\Http\Resources\TicketResource;
-use App\Jobs\ClassifyTicket;
+use App\Jobs\ClassifyTicketBack;
 use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -103,7 +103,7 @@ class TicketController extends Controller
     // POST /tickets/{ticket}/classify
     public function classify(Ticket $ticket): JsonResponse
     {
-        ClassifyTicket::dispatch($ticket);
+        ClassifyTicketBack::dispatch($ticket);
         return response()->json([
             'message' => 'Classification job dispatched.'
         ], 202);

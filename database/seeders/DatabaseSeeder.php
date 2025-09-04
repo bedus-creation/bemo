@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         // Seed tickets
         $this->call([
             TicketSeeder::class,
+            TicketCategorySeeder::class,
         ]);
     }
 }

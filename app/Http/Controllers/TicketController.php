@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTicketRequest;
 use App\Http\Requests\UpdateTicketRequest;
 use App\Http\Resources\TicketResource;
-use App\Jobs\ClassifyTicketJob;
 use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
-    // GET /tickets
     public function index(Request $request)
     {
         $query = Ticket::query();
@@ -45,7 +43,6 @@ class TicketController extends Controller
         return TicketResource::collection($paginator);
     }
 
-    // GET /tickets/stats
     public function stats(): JsonResponse
     {
         $total = Ticket::query()->count();
@@ -57,55 +54,45 @@ class TicketController extends Controller
             ->pluck('aggregate', 'status');
 
         $status = [
-            'open' => (int) ($statusRows['open'] ?? 0),
+            'open'    => (int) ($statusRows['open'] ?? 0),
             'pending' => (int) ($statusRows['pending'] ?? 0),
-            'closed' => (int) ($statusRows['closed'] ?? 0),
+            'closed'  => (int) ($statusRows['closed'] ?? 0),
         ];
 
         // Category counts (dynamic keys)
         $category = Ticket::query()
-            ->select('category', DB::raw('COUNT(*) as aggregate'))
-            ->whereNotNull('category')
-            ->groupBy('category')
-            ->pluck('aggregate', 'category')
-            ->map(fn ($v) => (int) $v);
+            ->select('ticket_category_id', DB::raw('COUNT(*) as aggregate'))
+            ->whereNotNull('ticket_category_id')
+            ->groupBy('ticket_category_id')
+            ->pluck('aggregate', 'ticket_category_id')
+            ->map(fn($v) => (int) $v);
 
         return response()->json([
-            'total' => (int) $total,
-            'status' => $status,
+            'total'      => (int) $total,
+            'status'     => $status,
             'categories' => $category,
         ]);
     }
 
-    // POST /tickets
     public function store(StoreTicketRequest $request): JsonResponse
     {
         $ticket = Ticket::create($request->validated());
+
         return (new TicketResource($ticket))
             ->response()
             ->setStatusCode(201);
     }
 
-    // GET /tickets/{ticket}
     public function show(Ticket $ticket): TicketResource
     {
         return new TicketResource($ticket);
     }
 
-    // PATCH /tickets/{ticket}
     public function update(UpdateTicketRequest $request, Ticket $ticket): TicketResource
     {
         $ticket->fill($request->validated());
         $ticket->save();
-        return new TicketResource($ticket);
-    }
 
-    // POST /tickets/{ticket}/classify
-    public function classify(Ticket $ticket): JsonResponse
-    {
-        ClassifyTicketJob::dispatch($ticket);
-        return response()->json([
-            'message' => 'Classification job dispatched.'
-        ], 202);
+        return new TicketResource($ticket);
     }
 }

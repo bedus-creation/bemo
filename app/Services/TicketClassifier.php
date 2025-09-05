@@ -21,7 +21,7 @@ class TicketClassifier
             ->id;
 
         $ticket->classification()->create([
-            'category'    => $ticketCategoryId,
+            'category_id' => $ticketCategoryId,
             'explanation' => $ticketCategory->explanation,
             'confidence'  => $ticketCategory->confidence,
         ]);

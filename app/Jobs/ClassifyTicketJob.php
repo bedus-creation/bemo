@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Services\RateLimitException;
 use App\Services\TicketClassifier;
 use DateTime;
 use Illuminate\Bus\Queueable;
@@ -14,7 +13,7 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 
 
-class ClassifyTicketBack implements ShouldQueue
+class ClassifyTicketJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

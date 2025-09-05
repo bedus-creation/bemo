@@ -40,7 +40,7 @@ return [
 
         // Enables specific features based on the need
         'features' => [
-            'classify_enabled' => env('OPENAI_CLASSIFY_ENABLED', false),
+            'classify_enabled' => (bool) env('OPENAI_CLASSIFY_ENABLED', false),
         ]
     ],
 ];

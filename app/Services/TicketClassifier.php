@@ -21,7 +21,7 @@ class TicketClassifier
             ->id;
 
         $ticket->classification()->create([
-            'category'    => $ticketCategoryId,
+            'category_id' => $ticketCategoryId,
             'explanation' => $ticketCategory->explanation,
             'confidence'  => $ticketCategory->confidence,
         ]);
@@ -36,6 +36,14 @@ class TicketClassifier
 
     public function classifyTicket(Ticket $ticket): TicketClassifySchema
     {
+        if (!config('services.openai.features.classify_enabled')) {
+            return new TicketClassifySchema(
+                category: TicketCategory::query()->inRandomOrder()->first()->name,
+                confidence: rand(0.1, 1),
+                explanation: 'Random classification generated as AI is disabled.',
+            );
+        }
+
         $categories = TicketCategory::query()->select('name')->get();
 
         $instruction = 'You are a support ticket classifier. Respond ONLY with strict JSON having keys: '.

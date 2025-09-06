@@ -10,17 +10,17 @@ class TicketCategorySeeder extends Seeder
     public function run(): void
     {
         $ticketCategories = [
-            'billing',           // Payment issues, invoices, refunds
-            'technical',         // Software bugs, system errors, troubleshooting
-            'account',           // Login issues, account access, profile updates
-            'sales',             // Purchase inquiries, product info, upsells
-            'general',           // Miscellaneous questions, feedback, non-specific requests
-            'feature_request',   // Requests for new features or improvements
-            'bug_report',        // Explicit software or system bugs
-            'security',          // Security concerns, phishing, account compromise
-            'shipping',          // Delivery, tracking, logistics issues
-            'cancellation',      // Subscription or order cancellations
-            'complaint',         // Customer complaints or dissatisfaction
+            'Billing',           // Payment issues, invoices, refunds
+            'Technical',         // Software bugs, system errors, troubleshooting
+            'Account',           // Login issues, account access, profile updates
+            'Sales',             // Purchase inquiries, product info, upsells
+            'General',           // Miscellaneous questions, feedback, non-specific requests
+            'Feature request',   // Requests for new features or improvements
+            'Bug report',        // Explicit software or system bugs
+            'Security',          // Security concerns, phishing, account compromise
+            'Shipping',          // Delivery, tracking, logistics issues
+            'Cancellation',      // Subscription or order cancellations
+            'Complaint',         // Customer complaints or dissatisfaction
         ];
 
         foreach ($ticketCategories as $category) {

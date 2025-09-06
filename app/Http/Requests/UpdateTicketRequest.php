@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateTicketRequest extends FormRequest
 {
@@ -14,10 +15,13 @@ class UpdateTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // PATCH allows partial updates of these fields
-            'status' => ['sometimes', 'string', 'in:open,pending,closed'],
-            'category' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'note' => ['sometimes', 'nullable', 'string'],
+            'status'   => ['sometimes', 'string', 'in:open,pending,closed'],
+            'category' => [
+                'sometimes',
+                'nullable',
+                Rule::exists('ticket_categories', 'id')
+            ],
+            'note'     => ['sometimes', 'nullable', 'string'],
         ];
     }
 }

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreignUlid('ticket_id')->constrained('tickets')->cascadeOnDelete();
             $table->foreignId('category_id')->constrained('ticket_categories')->cascadeOnDelete();
             $table->text('explanation')->nullable();
-            $table->decimal('confidence', 3, 2);
+            $table->float('confidence', 2);
             $table->timestamps();
         });
     }

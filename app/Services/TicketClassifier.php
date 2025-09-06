@@ -13,17 +13,20 @@ class TicketClassifier
     {
         $ticket = Ticket::query()->findOrFail($ticketId);
 
-        $ticketCategory = $this->classifyTicket($ticket);
+        $ticketCategorySchema = $this->classifyTicket($ticket);
 
-        $ticketCategoryId = TicketCategory::query()
-            ->where('name', $ticketCategory->category)
-            ->first()
-            ->id;
+        $ticketCategory = TicketCategory::query()
+            ->where('name', $ticketCategorySchema->category)
+            ->first();
+
+        if (!$ticketCategory) {
+            throw new \Exception("Ticket category not found: {$ticketCategorySchema->category}");
+        }
 
         $ticket->classification()->create([
-            'category_id' => $ticketCategoryId,
-            'explanation' => $ticketCategory->explanation,
-            'confidence'  => $ticketCategory->confidence,
+            'category_id' => $ticketCategory->id,
+            'explanation' => $ticketCategorySchema->explanation,
+            'confidence'  => $ticketCategorySchema->confidence,
         ]);
 
         // If the ticket has already had a category, skip
@@ -31,15 +34,15 @@ class TicketClassifier
             return;
         }
 
-        $ticket->update(['ticket_category_id' => $ticketCategoryId]);
+        $ticket->update(['ticket_category_id' => $ticketCategory->id]);
     }
 
     public function classifyTicket(Ticket $ticket): TicketClassifySchema
     {
         if (!config('services.openai.features.classify_enabled')) {
             return new TicketClassifySchema(
-                category: TicketCategory::query()->inRandomOrder()->first()->name,
-                confidence: rand(0.1, 1),
+                category: TicketCategory::query()->inRandomOrder()->firstOrFail()->name,
+                confidence: rand(1, 10) * 0.1, // Random confidence between 0.1 and 1.0
                 explanation: 'Random classification generated as AI is disabled.',
             );
         }
@@ -84,6 +87,9 @@ TICKET
                 ]
             ]);
 
-        return new TicketClassifySchema(...json_decode($response->outputText, true));
+        /** @var array{'category': string, 'confidence': float, 'explanation': string} $schemeArray */
+        $schemeArray = json_decode($response->outputText ?? '', true);
+
+        return new TicketClassifySchema(...$schemeArray);
     }
 }

@@ -15,11 +15,7 @@ class StoreTicketRequest extends FormRequest
     {
         return [
             'subject' => ['required', 'string', 'max:255'],
-            'body' => ['required', 'string'],
-            // Allow providing status optionally but restrict to allowed values
-            'status' => ['sometimes', 'string', 'in:open,pending,closed'],
-            'category' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'note' => ['sometimes', 'nullable', 'string'],
+            'body'    => ['required', 'string'],
         ];
     }
 }

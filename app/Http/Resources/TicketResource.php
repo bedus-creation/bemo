@@ -2,9 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\DateHelper;
+use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Ticket
+ */
 class TicketResource extends JsonResource
 {
     /**
@@ -15,16 +20,16 @@ class TicketResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => (string) $this->id,
-            'subject' => $this->subject,
-            'body' => $this->body,
-            'status' => $this->status,
-            'category' => $this->category,
-            'note' => $this->note,
-            'classification_explanation' => $this->classification_explanation,
-            'classification_confidence' => $this->classification_confidence,
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'id'         => $this->id,
+            'subject'    => $this->subject,
+            'body'       => $this->body,
+            'status'     => $this->status,
+            'note'       => $this->note,
+            'created_at' => DateHelper::response($this->created_at),
+            'updated_at' => DateHelper::response($this->updated_at),
+
+            'category'       => TicketCategoryResource::make($this->whenLoaded('category')),
+            'classification' => TicketClassificationResource::make($this->whenLoaded('classification')),
         ];
     }
 }

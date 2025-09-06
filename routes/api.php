@@ -1,15 +1,17 @@
 <?php
 declare(strict_types=1);
 
+use App\Http\Controllers\TicketCategoryController;
 use App\Http\Controllers\TicketClassifyController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketStatsController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('tickets')->group(function (): void {
-    Route::post('/', [TicketController::class, 'store']);
-    Route::get('/', [TicketController::class, 'index']);
-    Route::get('stats', [TicketController::class, 'stats']);
-    Route::get('{ticket}', [TicketController::class, 'show']);
-    Route::patch('{ticket}', [TicketController::class, 'update']);
-    Route::post('{ticket}/classify', TicketClassifyController::class);
+
+Route::group(['as' => 'api.'], function (): void {
+    Route::get('categories', TicketCategoryController::class)->name('categories.index');
+    Route::get('tickets/stats', TicketStatsController::class)->name('tickets.stats.index');
+
+    Route::apiResource('tickets', TicketController::class);
+    Route::apiResource('tickets.classify', TicketClassifyController::class)->only('store');
 });

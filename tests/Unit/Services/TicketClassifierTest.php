@@ -41,7 +41,7 @@ class TicketClassifierTest extends TestCase
             'ticket_id'   => $ticket->id,
             'category_id' => $billing->id,
             'explanation' => 'Looks like a billing question.',
-            // confidence stored as decimal(3,2) so 0.90 may be stored; assert loosely by fetching later
+            'confidence'  => 0.9,
         ]);
 
         // Assert: ticket updated with classified category
@@ -75,6 +75,7 @@ class TicketClassifierTest extends TestCase
             'ticket_id'   => $ticket->id,
             'category_id' => $other->id,
             'explanation' => 'Mentions error logs and stack traces.',
+            'confidence'  => 0.8,
         ]);
     }
 }

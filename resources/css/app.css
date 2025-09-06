@@ -9,3 +9,4 @@ html, body { margin: 0; padding: 0; }
 .nav__link { color: #2f6fed; text-decoration: none; padding: 4px 6px; border-radius: 4px; }
 .nav__link.router-link-active { background: #e8efff; }
 .app__content { min-height: 200px; }
+.app__logo { width: 100px; }

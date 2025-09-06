@@ -19,6 +19,7 @@ return new class extends Migration {
                 ->constrained('ticket_categories')
                 ->nullOnDelete();
             $table->enum('status', ['open', 'pending', 'closed'])->default('open');
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }

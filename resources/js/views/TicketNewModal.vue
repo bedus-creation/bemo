@@ -3,22 +3,27 @@
         <div class="modal__dialog">
             <h2 class="modal__title">New Ticket</h2>
             <form @submit.prevent="submitNewTicket">
-                <label class="form__label">Subject
-                    <input
-                        v-model="form.subject"
-                        class="input"
-                        @input="form.validate('subject')"/>
-                    <InputError :message="form.errors.subject"/>
-                </label>
-                <label class="form__label">Body
-                    <textarea
-                        v-model="form.body"
-                        class="textarea"
-                        rows="5"
-                        @input="form.validate('body')">
+                <div>
+                    <label class="form__label">
+                        Subject
+                        <input
+                            v-model="form.subject"
+                            class="input"
+                            @input="form.validate('subject')"/>
+                        <InputError :message="form.errors.subject"/>
+                    </label>
+                </div>
+                <div>
+                    <label class="form__label">Body
+                        <textarea
+                            v-model="form.body"
+                            class="textarea"
+                            rows="5"
+                            @input="form.validate('body')">
                     </textarea>
-                    <InputError :message="form.errors.body"/>
-                </label>
+                        <InputError :message="form.errors.body"/>
+                    </label>
+                </div>
                 <div class="modal__actions">
                     <button type="button" class="button" @click="close">Cancel</button>
                     <button type="submit" class="button button--primary" :disabled="form.processing || form.hasErrors">

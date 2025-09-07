@@ -15,6 +15,6 @@
 </script>
 <style>
     .input-error {
-        color: red;
+        color: var(--color-text-danger);
     }
 </style>

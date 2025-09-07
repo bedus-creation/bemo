@@ -1,10 +1,10 @@
 <template>
     <section class="tickets">
         <header class="tickets__header">
-            <h1 class="tickets__title">Tickets</h1>
+            <h1 class="text--h1">Tickets</h1>
             <div class="tickets__actions">
-                <button class="button button--primary" @click="showNewModal = true">New Ticket</button>
-                <a :href="`/api/tickets/export?${queryString}`" class="link">CSV Export</a>
+                <button class="button button--primary text--small" @click="showNewModal = true">New Ticket</button>
+                <a :href="`/api/tickets/export?${queryString}`" class="link--button text--small">CSV Export</a>
             </div>
         </header>
 
@@ -31,55 +31,57 @@
         <div v-if="loading" class="tickets__loading">Loading tickets…</div>
         <div v-else>
             <div v-if="tickets.length === 0" class="tickets__empty">No tickets found.</div>
-
-            <table class="ticket-table" v-if="tickets.length">
-                <thead>
-                    <tr>
-                        <th class="ticket-table__th">Subject</th>
-                        <th class="ticket-table__th">Category</th>
-                        <th class="ticket-table__th">Confidence</th>
-                        <th class="ticket-table__th">Note</th>
-                        <th class="ticket-table__th ticket-table__actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="t in tickets" :key="t.id" class="ticket-table__row">
-                        <td class="ticket-table__td">
-                            <router-link class="ticket-table__subject" :to="{ name: 'ticket-detail', params: { id: t.id } }" :title="t.body">{{ t.subject }}</router-link>
-                            <div class="ticket-table__meta">{{ t.created_at.diff }}</div>
-                        </td>
-                        <td class="ticket-table__td">
+            <div class="ticket-table__wrapper" v-if="tickets.length">
+                <table class="ticket-table">
+                    <thead>
+                        <tr>
+                            <th class="ticket-table__th">Subject</th>
+                            <th class="ticket-table__th">Category</th>
+                            <th class="ticket-table__th">Confidence</th>
+                            <th class="ticket-table__th">Note</th>
+                            <th class="ticket-table__th ticket-table__actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="t in tickets" :key="t.id" class="ticket-table__row">
+                            <td class="ticket-table__td">
+                                <router-link class="ticket-table__subject" :to="{ name: 'ticket-detail', params: { id: t.id } }" :title="t.body">
+                                    {{ t.subject }}
+                                </router-link>
+                                <div class="ticket-table__meta">{{ t.created_at.diff }}</div>
+                            </td>
+                            <td class="ticket-table__td">
                             <span class="badge">
                               <span class="badge__dot" aria-hidden="true">i</span>
                               {{ t.category?.name || "—" }}
                             </span>
-                        </td>
-                        <td class="ticket-table__td">
+                            </td>
+                            <td class="ticket-table__td">
                              <span v-if="t.classification">
                                {{ t.classification?.confidence || 0 }}
                              </span>
-                            <span v-else>—</span>
-                        </td>
-                        <td class="ticket-table__td">
-                            <span v-if="t.note" class="note-badge" title="Internal note present">Note</span>
-                            <span v-else>—</span>
-                        </td>
-                        <td class="ticket-table__td ticket-table__actions">
-                            <button
-                                v-if="!t?.classification"
-                                class="button"
-                                :disabled="classifying[t.id]"
-                                @click="classifyTicket(t)"
-                            >
-                                <span v-if="classifying[t.id]" class="spinner" aria-hidden="true"></span>
-                                <span>{{ classifying[t.id] ? "Classifying…" : "Classify" }}</span>
-                            </button>
-                            <button class="button button--link" @click="editNote(t)">Edit Note</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
+                                <span v-else>—</span>
+                            </td>
+                            <td class="ticket-table__td">
+                                <span v-if="t.note" class="note-badge" title="Internal note present">Note</span>
+                                <span v-else>—</span>
+                            </td>
+                            <td class="ticket-table__td ticket-table__actions">
+                                <button
+                                    v-if="!t?.classification"
+                                    class="button"
+                                    :disabled="classifying[t.id]"
+                                    @click="classifyTicket(t)"
+                                >
+                                    <span v-if="classifying[t.id]" class="spinner" aria-hidden="true"></span>
+                                    {{ classifying[t.id] ? "Classifying…" : "Classify" }}
+                                </button>
+                                <button class="button" @click="editNote(t)">Edit Note</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <div class="pagination" v-if="totalPages > 1">
                 <button class="button" :disabled="page===1" @click="goToPage(page-1)">Prev</button>
                 <span class="pagination__info">Page {{ page }} of {{ totalPages }}</span>
@@ -146,7 +148,7 @@
             page: "fetchTickets",
         },
         computed: {
-            queryString: function () {
+            queryString: function() {
                 const params = new URLSearchParams({
                     per_page: this.perPage,
                     query: this.search.trim().toLowerCase(),
@@ -155,7 +157,7 @@
                     page: this.page,
                 })
 
-                return params.toString();
+                return params.toString()
             },
         },
         created() {
@@ -276,61 +278,18 @@
 </script>
 
 <style>
-    /***** Base *****/
-    .app {
-        padding: 16px;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-        color: #222;
-    }
-
-    .app__title {
-        margin: 0 0 16px;
-    }
 
     /***** Controls *****/
-    .button {
-        background: #f0f0f0;
-        border: 1px solid #ccc;
-        padding: 6px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        justify-content: center;
-        display: inline-flex;
-    }
-
-    .button:disabled {
-        opacity: 0.6;
-        cursor: default;
-    }
-
     .button--primary {
         background: #2f6fed;
         border-color: #2f6fed;
         color: #fff;
     }
 
-    .button--link {
-        background: transparent;
-        border: none;
-        color: #2f6fed;
-        text-decoration: underline;
-        padding: 0 4px;
-    }
-
-    .a--link {
-        text-decoration: none;
-    }
-
-    .input, .select, .textarea {
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 6px 8px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
     .input--search {
         max-width: 320px;
+        padding: 6px 12px;
+        height: 1.9rem;
     }
 
     .spinner {
@@ -364,10 +323,6 @@
         margin-bottom: 12px;
     }
 
-    .tickets__title {
-        margin: 0;
-    }
-
     .tickets__filters {
         display: flex;
         gap: 8px;
@@ -377,7 +332,12 @@
 
     .tickets__loading, .tickets__empty {
         padding: 12px;
-        color: #555;
+        height: 5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--color-bg-panel);
+        color: var(--color-text-body);
     }
 
     .tickets__actions {
@@ -393,7 +353,8 @@
 
     .ticket-table__th, .ticket-table__td {
         text-align: left;
-        border-bottom: 1px solid #eee;
+        color: var(--color-text-heading);
+        border-bottom: 1px solid var(--color-text-body);
         padding: 8px;
         vertical-align: top;
     }
@@ -404,6 +365,7 @@
 
     .ticket-table__subject {
         font-weight: 600;
+        color: var(--color-text-body);
     }
 
     .ticket-table__meta {
@@ -416,9 +378,9 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #eef2ff;
+        background: var(--color-bg-panel-100);
         border: 1px solid #c7d2fe;
-        color: #1e3a8a;
+        color: var(--color-text-body);
         padding: 2px 6px;
         border-radius: 999px;
     }
@@ -428,41 +390,11 @@
         width: 14px;
         height: 14px;
         border-radius: 50%;
-        background: #1e3a8a;
+        background: var(--color-bg-panel-200);
         color: #fff;
         font-size: 10px;
         align-items: center;
         justify-content: center;
-    }
-
-    .badge--billing {
-        background: #fff7ed;
-        border-color: #fed7aa;
-        color: #7c2d12;
-    }
-
-    .badge--technical {
-        background: #ecfeff;
-        border-color: #a5f3fc;
-        color: #0e7490;
-    }
-
-    .badge--account {
-        background: #f0fdf4;
-        border-color: #bbf7d0;
-        color: #166534;
-    }
-
-    .badge--sales {
-        background: #fdf2f8;
-        border-color: #fbcfe8;
-        color: #9d174d;
-    }
-
-    .badge--general {
-        background: #eef2ff;
-        border-color: #c7d2fe;
-        color: #1e3a8a;
     }
 
     .note-badge {
@@ -481,45 +413,18 @@
         gap: 8px;
         align-items: center;
         justify-content: flex-end;
-        margin-top: 12px;
+        margin: 12px;
     }
 
     .pagination__info {
         color: #555;
     }
 
-    /***** Modal *****/
-    .modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal__dialog {
-        background: #fff;
-        width: 520px;
-        max-width: calc(100% - 24px);
+    .ticket-table__wrapper {
+        padding: 1rem;
+        background: var(--color-bg-panel);
+        color: var(--color-text-body);
         border-radius: 8px;
-        padding: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-
-    .modal__title {
-        margin-top: 0;
-    }
-
-    .modal__actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        margin-top: 12px;
-    }
-
-    .form__label {
-        display: block;
-        margin-bottom: 8px;
+        margin-bottom: 2rem;
     }
 </style>

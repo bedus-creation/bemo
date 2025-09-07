@@ -12,8 +12,7 @@ use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 
-
-class ClassifyTicketJob implements ShouldQueue
+class TicketClassifierJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -31,7 +30,7 @@ class ClassifyTicketJob implements ShouldQueue
         return [
             1 * 60,
             5 * 60,
-            10 * 60
+            10 * 60,
         ];
     }
 

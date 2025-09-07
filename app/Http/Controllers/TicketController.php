@@ -4,79 +4,44 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTicketRequest;
-use App\Http\Requests\UpdateTicketRequest;
+use App\Dtos\TicketFilterDto;
+use App\Http\Requests\TicketListRequest;
+use App\Http\Requests\TicketStoreRequest;
+use App\Http\Requests\TicketUpdateRequest;
 use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
+use App\Queries\TicketListQuery;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
-    public function index(Request $request)
+    public function index(TicketListRequest $request, TicketListQuery $query)
     {
-        $query = Ticket::query();
+        $page = (int) $request->input('page', 1);
+        $perPage = (int) $request->input('per_page', 10);
+        $status = $request->input('status');
+        $q = $request->input('query');
+        $category = (int) $request->input('category');
 
-        // Filters: status, category
-        if ($status = $request->query('status')) {
-            $query->where('status', $status);
-        }
-        if ($category = $request->query('category')) {
-            $query->where('category', $category);
-        }
+        $ticketFilterDto = new TicketFilterDto(
+            status: $status,
+            category: $category,
+            q: $q
+        );
 
-        // Search: q in subject/body
-        if ($q = $request->query('q')) {
-            $query->where(function ($qbuilder) use ($q) {
-                $qbuilder->where('subject', 'like', "%{$q}%")
-                    ->orWhere('body', 'like', "%{$q}%");
-            });
-        }
+        $results = (new TicketListQuery($ticketFilterDto))
+            ->getQuery()
+            ->paginate(perPage: $perPage, page: $page);
 
-        // Pagination params
-        $perPage = (int) $request->query('per_page', 15);
-        $perPage = max(1, min(100, $perPage));
-
-        $paginator = $query->orderByDesc('created_at')->paginate($perPage)->appends($request->query());
-
-        return TicketResource::collection($paginator);
+        return TicketResource::collection($results);
     }
 
-    public function stats(): JsonResponse
+    public function store(TicketStoreRequest $request): JsonResponse
     {
-        $total = Ticket::query()->count();
+        $ticket = Ticket::query()->create($request->validated());
 
-        // Status counts
-        $statusRows = Ticket::query()
-            ->select('status', DB::raw('COUNT(*) as aggregate'))
-            ->groupBy('status')
-            ->pluck('aggregate', 'status');
-
-        $status = [
-            'open'    => (int) ($statusRows['open'] ?? 0),
-            'pending' => (int) ($statusRows['pending'] ?? 0),
-            'closed'  => (int) ($statusRows['closed'] ?? 0),
-        ];
-
-        // Category counts (dynamic keys)
-        $category = Ticket::query()
-            ->select('ticket_category_id', DB::raw('COUNT(*) as aggregate'))
-            ->whereNotNull('ticket_category_id')
-            ->groupBy('ticket_category_id')
-            ->pluck('aggregate', 'ticket_category_id')
-            ->map(fn($v) => (int) $v);
-
-        return response()->json([
-            'total'      => (int) $total,
-            'status'     => $status,
-            'categories' => $category,
-        ]);
-    }
-
-    public function store(StoreTicketRequest $request): JsonResponse
-    {
-        $ticket = Ticket::create($request->validated());
+        // TODO: Should we dispatch the job after the create?
+        // TicketClassifierJob::dispatch($ticket->id)->afterCommit();
 
         return (new TicketResource($ticket))
             ->response()
@@ -85,13 +50,17 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket): TicketResource
     {
+        $ticket->load(['category', 'classification', 'classification.category']);
+
         return new TicketResource($ticket);
     }
 
-    public function update(UpdateTicketRequest $request, Ticket $ticket): TicketResource
+    public function update(TicketUpdateRequest $request, Ticket $ticket): TicketResource
     {
-        $ticket->fill($request->validated());
-        $ticket->save();
+        $ticket->update($request->validated());
+
+        // TODO: Should we dispatch the job after the update?
+        // TicketClassifierJob::dispatch($ticket->id)->afterCommit();
 
         return new TicketResource($ticket);
     }

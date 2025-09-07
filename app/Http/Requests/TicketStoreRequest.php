@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreTicketRequest extends FormRequest
+class TicketStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -16,10 +16,6 @@ class StoreTicketRequest extends FormRequest
         return [
             'subject' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
-            // Allow providing status optionally but restrict to allowed values
-            'status' => ['sometimes', 'string', 'in:open,pending,closed'],
-            'category' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'note' => ['sometimes', 'nullable', 'string'],
         ];
     }
 }

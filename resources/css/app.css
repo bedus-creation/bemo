@@ -9,3 +9,26 @@ html, body { margin: 0; padding: 0; }
 .nav__link { color: #2f6fed; text-decoration: none; padding: 4px 6px; border-radius: 4px; }
 .nav__link.router-link-active { background: #e8efff; }
 .app__content { min-height: 200px; }
+.app__logo { width: 100px; }
+
+/* Base text block */
+.text {
+    font-family: 'Inter', sans-serif; /* your default font */
+    font-weight: 400;
+    line-height: 1.5;
+    color: #333;
+    margin: 0;
+}
+
+/* Headings */
+.text--h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.2; }
+.text--h2 { font-size: 2rem;   font-weight: 600; line-height: 1.3; }
+.text--h3 { font-size: 1.5rem; font-weight: 600; line-height: 1.4; }
+
+/* Body */
+.text--body { font-size: 1rem; font-weight: 400; line-height: 1.5; }
+
+/* Small / captions */
+.text--small { font-size: 0.875rem; line-height: 1.4; }
+.text--caption { font-size: 0.75rem; line-height: 1.3; color: #666; }
+

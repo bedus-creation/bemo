@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "illuminate/json-schema": "^12.28",
         "laravel/framework": "^11.31",
         "laravel/telescope": "^5.11",
         "laravel/tinker": "^2.9",

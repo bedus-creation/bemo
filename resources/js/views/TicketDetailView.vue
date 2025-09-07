@@ -3,10 +3,13 @@
         <header class="ticket-detail__header">
             <h1 class="ticket-detail__title">Ticket</h1>
             <div class="ticket-detail__actions">
-                <router-link class="button" to="/tickets">Back to list</router-link>
-                <button class="button button--primary" :disabled="classifying || ticket?.classification" @click="runClassification">
+                <router-link class="link--button text--small" to="/tickets">Go to Tickets</router-link>
+                <button
+                    class="button button--primary"
+                    :disabled="classifying || ticket?.classification"
+                    @click="runClassification">
                     <span v-if="classifying" class="spinner" aria-hidden="true"></span>
-                    <span>{{ classifying ? "Classifying…" : "Run Classification" }}</span>
+                    {{ classifying ? "Classifying…" : "Run Classification" }}
                 </button>
             </div>
         </header>
@@ -14,27 +17,30 @@
         <div v-if="loading" class="ticket-detail__loading">Loading…</div>
         <div v-else-if="error" class="ticket-detail__error">{{ error }}</div>
         <div v-else-if="ticket" class="ticket-detail__content">
-            <div class="ticket-detail__section">
-                <label class="ticket-detail__label">Subject</label>
-                <div class="ticket-detail__subject">{{ ticket.subject }}</div>
-            </div>
-
-            <div class="ticket-detail__section">
-                <label class="ticket-detail__label">Body</label>
-                <pre class="ticket-detail__body">{{ ticket.body }}</pre>
-            </div>
-
-            <div class="ticket-detail__grid">
+            <div class="ticket-detail__info">
                 <div class="ticket-detail__section">
-                    <label class="ticket-detail__label">Category</label>
-                    <select class="select" v-model="categoryDraft" @change="saveCategory">
-                        <option value="">—</option>
-                        <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-                    </select>
-                    <small class="ticket-detail__hint">Changing the dropdown saves immediately.</small>
+                    <label class="ticket-detail__label">Subject</label>
+                    <div class="ticket-detail__body">{{ ticket.subject }}</div>
+                </div>
+
+                <div class="ticket-detail__section">
+                    <label class="ticket-detail__label">Body</label>
+                    <pre class="ticket-detail__body">{{ ticket.body }}</pre>
+                </div>
+
+                <div class="ticket-detail__grid">
+                    <div class="ticket-detail__section">
+                        <label class="ticket-detail__label">Category</label>
+                        <select class="select ticket-detail__body" v-model="categoryDraft" @change="saveCategory">
+                            <option value="">—</option>
+                            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+                        </select>
+                        <small class="ticket-detail__hint">Changing the dropdown saves immediately.</small>
+                    </div>
                 </div>
             </div>
-            <div class="ticket-detail__grid">
+
+            <div class="ticket-detail__grid ticket-detail__ai">
                 <div class="ticket-detail__section">
                     <label class="ticket-detail__label">AI Category</label>
                     <div class="ticket-detail__readonly">{{ ticket.classification?.category?.name || "-" }}</div>
@@ -53,24 +59,37 @@
                 </div>
             </div>
 
-            <div class="ticket-detail__section ticket-detail__section--wide">
-                <label class="ticket-detail__label">Internal Note</label>
-                <textarea class="textarea" rows="6" v-model="noteDraft" placeholder="Add an internal note…"></textarea>
-                <div class="ticket-detail__note-actions">
-                    <button class="button" :disabled="savingNote || noteDraft === (ticket.note || '')" @click="saveNote">
-                        {{ savingNote ? "Saving…" : "Save Note" }}
-                    </button>
-                    <span v-if="saveError" class="ticket-detail__error">{{ saveError }}</span>
-                    <span v-if="savedAt" class="ticket-detail__muted">Saved at {{ savedAt }}</span>
-                </div>
+            <div class="ticket-detail__section ticket-detail__section--wide ticket-detail__internal_notes">
+                <form @submit.prevent="saveNote">
+                    <label class="ticket-detail__label">Internal Note</label>
+                    <textarea class="textarea"
+                              rows="6"
+                              v-model="noteForm.note"
+                              placeholder="Add an internal note…">
+                </textarea>
+                    <div class="ticket-detail__note-actions">
+                        <button class="button"
+                                type="submit"
+                                :disabled="noteForm.processing || noteForm.hasErrors">
+                            {{ noteForm.processing ? "Saving…" : "Save Note" }}
+                        </button>
+                        <InputError :message="noteForm.errors.note"/>
+                        <span v-if="savedAt" class="ticket-detail__muted">Saved at {{ savedAt }}</span>
+                    </div>
+                </form>
             </div>
         </div>
     </section>
 </template>
 
 <script>
+    import { useForm } from "formjs-vue2"
+    import { object, string } from "yup"
+    import InputError from "../components/InputError.vue"
+    import { useHttp } from "../composables/useHttp.js"
     export default {
         name: "TicketDetailView",
+        components: { InputError },
         data() {
             return {
                 loading: false,
@@ -80,18 +99,16 @@
                 poller: null,
                 categories: [],
                 categoryDraft: "",
-                noteDraft: "",
-                savingNote: false,
-                saveError: null,
+
+                noteForm: useForm({
+                    note: "",
+                }, {
+                    schema: object({
+                        note: string().required().max(1000).label("Internal note"),
+                    }),
+                }),
                 savedAt: "",
             }
-        },
-        computed: {
-            confidenceText() {
-                const c = this.ticket?.classification_confidence
-                if (c === null || c === undefined) return "—"
-                try { return Number(c).toFixed(2) } catch (_) { return String(c) }
-            },
         },
         created() {
             this.fetchCategories()
@@ -99,61 +116,58 @@
         },
         methods: {
             async fetchCategories() {
-                const res = await fetch("/api/categories", {
-                    method: "GET",
-                    headers: {
-                        Accept: "application/json",
+                await useHttp().get("/api/categories", {}, {
+                    onSuccess: (data) => {
+                        this.categories = data?.data || []
                     },
                 })
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`)
-                }
-
-                const data = await res.json()
-                this.categories = data?.data || data || []
             },
             async fetchTicket() {
                 this.loading = true
                 this.error = null
-                try {
-                    const id = this.$route.params.id
-                    const res = await window.axios.get(`/api/tickets/${id}`)
-                    const t = res.data?.data || res.data
-                    this.ticket = t
-                    this.categoryDraft = t.category?.id || ""
-                    this.noteDraft = t.note || ""
-                } catch (e) {
-                    // eslint-disable-next-line no-console
-                    console.error(e)
-                    this.error = "Failed to load ticket"
-                } finally {
-                    this.loading = false
-                }
+
+                const id = this.$route.params.id
+                await useHttp().get(`/api/tickets/${id}`, {}, {
+                    onSuccess: (data) => {
+                        this.ticket = data.data
+                        this.categoryDraft = this.ticket.category?.id || ""
+                        this.noteForm.note = this.ticket.note || ""
+                    },
+                    onError: (error) => {
+                        this.error = error?.response?.data?.message || "Failed to load ticket"
+                    },
+                    onFinally: () => {
+                        this.loading = false
+                    },
+                })
             },
             async saveCategory() {
                 if (!this.ticket) return
-                try {
-                    const res = await window.axios.patch(`/api/tickets/${this.ticket.id}`, { category: this.categoryDraft || null })
-                    this.ticket = res.data?.data || res.data
-                } catch (e) {
-                    alert("Failed to update category")
-                    this.categoryDraft = this.ticket.category || ""
-                }
+
+                await useHttp().put(`/api/tickets/${this.ticket.id}`, { category: this.categoryDraft || null }, {
+                    onSuccess: () => {
+                        // Alert something
+                    },
+                    onError: () => {
+                        this.categoryDraft = this.ticket.category?.id || ""
+                    },
+                })
             },
             async saveNote() {
-                if (!this.ticket) return
-                this.savingNote = true
-                this.saveError = null
-                try {
-                    const res = await window.axios.patch(`/api/tickets/${this.ticket.id}`, { note: this.noteDraft || null })
-                    this.ticket = res.data?.data || res.data
-                    this.savedAt = new Date().toLocaleTimeString()
-                } catch (e) {
-                    this.saveError = "Failed to save note"
-                } finally {
-                    this.savingNote = false
+                await this.noteForm.validate()
+                if (this.noteForm.hasErrors) {
+                    return
                 }
+
+                this.noteForm.put(`/api/tickets/${this.ticket.id}`, {
+                    onSuccess: () => {
+                        this.savedAt = new Date().toLocaleTimeString()
+                    },
+                    onError: () => {
+                        alert("Failed to update note")
+                        this.noteForm.reset()
+                    },
+                })
             },
             async runClassification() {
                 if (!this.ticket || this.classifying) return
@@ -176,7 +190,7 @@
                         const res = await window.axios.get(`/api/tickets/${this.ticket.id}`)
                         const t = res.data?.data || res.data
                         this.ticket = t
-                        if (t.classification_confidence !== null && t.classification_confidence !== undefined) {
+                        if (t.classification) {
                             this.stopPolling()
                             this.classifying = false
                         }
@@ -218,6 +232,7 @@
 
     .ticket-detail__title {
         margin: 0;
+        color: var(--color-text-heading);
     }
 
     .ticket-detail__actions {
@@ -246,6 +261,7 @@
         display: block;
         font-weight: 600;
         margin-bottom: 6px;
+        color: var(--color-text-heading);
     }
 
     .ticket-detail__subject {
@@ -256,8 +272,9 @@
     }
 
     .ticket-detail__body {
-        background: #fff;
-        border: 1px solid #eee;
+        background: var(--color-bg-panel-100);
+        border: 1px solid var(--color-text-body);
+        color: var(--color-text-body);
         padding: 8px;
         border-radius: 4px;
         white-space: pre-wrap;
@@ -270,11 +287,13 @@
     }
 
     .ticket-detail__readonly {
-        background: #fafafa;
-        border: 1px solid #eee;
+        background: var(--color-bg-panel-100);
+        border: 1px solid var(--color-text-body);
+        color: var(--color-text-body);
         padding: 8px;
         border-radius: 4px;
         min-height: 36px;
+        cursor: not-allowed;
     }
 
     .ticket-detail__readonly--empty {
@@ -303,23 +322,6 @@
         font-size: 12px;
     }
 
-    .link {
-        text-decoration: none;
-        background: #f0f0f0;
-        padding: 5px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    /* Reuse base controls from TicketsView */
-    .button {
-        background: #f0f0f0;
-        border: 1px solid #ccc;
-        padding: 6px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
     .button:disabled {
         opacity: 0.6;
         cursor: default;
@@ -332,7 +334,9 @@
     }
 
     .select, .textarea {
-        border: 1px solid #ccc;
+        border: 1px solid var(--color-text-heading);
+        background: var(--color-bg-panel-100);
+        color: var(--color-text-body);
         border-radius: 4px;
         padding: 6px 8px;
         width: 100%;
@@ -354,5 +358,25 @@
         to {
             transform: rotate(360deg);
         }
+    }
+
+    .ticket-detail__info {
+        background: var(--color-bg-panel);
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+    }
+
+    .ticket-detail__ai {
+        background: var(--color-bg-panel);
+        padding: 1rem;
+        border-radius: 4px;
+    }
+
+    .ticket-detail__internal_notes {
+        background: var(--color-bg-panel);
+        padding: 1rem;
+        border-radius: 4px;
+        margin-top: 2rem;
     }
 </style>

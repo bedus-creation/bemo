@@ -11,6 +11,7 @@
         <nav class="nav">
             <router-link class="nav__link" to="/dashboard">Dashboard</router-link>
             <router-link class="nav__link" to="/tickets">Tickets</router-link>
+            <ThemeSwitcher/>
         </nav>
     </header>
     <main class="app">
@@ -20,8 +21,10 @@
     </main>
 </template>
 <script>
+    import ThemeSwitcher from "./components/ui/ThemeSwitcher.vue"
     export default {
         name: "App",
+        components: { ThemeSwitcher },
         data() {
             return {
                 title: "Bemo",

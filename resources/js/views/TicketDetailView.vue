@@ -61,19 +61,21 @@
 
             <div class="ticket-detail__section ticket-detail__section--wide ticket-detail__internal_notes">
                 <form @submit.prevent="saveNote">
-                    <label class="ticket-detail__label">Internal Note</label>
-                    <textarea class="textarea"
-                              rows="6"
-                              v-model="noteForm.note"
-                              placeholder="Add an internal note…">
-                </textarea>
+                    <div>
+                        <label class="ticket-detail__label">Internal Note</label>
+                        <textarea class="textarea"
+                                  rows="6"
+                                  v-model="noteForm.note"
+                                  @input="noteForm.validate('note')"
+                                  placeholder="Add an internal note…"></textarea>
+                        <InputError :message="noteForm.errors.note"/>
+                    </div>
                     <div class="ticket-detail__note-actions">
                         <button class="button"
                                 type="submit"
                                 :disabled="noteForm.processing || noteForm.hasErrors">
                             {{ noteForm.processing ? "Saving…" : "Save Note" }}
                         </button>
-                        <InputError :message="noteForm.errors.note"/>
                         <span v-if="savedAt" class="ticket-detail__muted">Saved at {{ savedAt }}</span>
                     </div>
                 </form>
@@ -94,7 +96,14 @@
             return {
                 loading: false,
                 error: null,
-                ticket: null,
+                ticket: {
+                    id: null,
+                    subject: "",
+                    body: "",
+                    category: null,
+                    classification: null,
+                    note: null,
+                },
                 classifying: false,
                 poller: null,
                 categories: [],
@@ -129,7 +138,7 @@
                 const id = this.$route.params.id
                 await useHttp().get(`/api/tickets/${id}`, {}, {
                     onSuccess: (data) => {
-                        this.ticket = data.data
+                        Object.assign(this.ticket, data.data)
                         this.categoryDraft = this.ticket.category?.id || ""
                         this.noteForm.note = this.ticket.note || ""
                     },
@@ -186,22 +195,18 @@
                 const maxAttempts = 20
                 this.poller = setInterval(async () => {
                     attempts++
-                    try {
-                        const res = await window.axios.get(`/api/tickets/${this.ticket.id}`)
-                        const t = res.data?.data || res.data
-                        this.ticket = t
-                        if (t.classification) {
-                            this.stopPolling()
-                            this.classifying = false
-                        }
-                    } catch (e) {
-                        // ignore transient
+                    await this.fetchTicket()
+
+                    if (Object.keys(this.ticket.classification || {}).length > 0) {
+                        this.stopPolling()
+                        this.classifying = false
                     }
+
                     if (attempts >= maxAttempts) {
                         this.stopPolling()
                         this.classifying = false
                     }
-                }, 1000)
+                }, 2000)
             },
             stopPolling() {
                 if (this.poller) {

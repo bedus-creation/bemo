@@ -1,5 +1,13 @@
 # Bemo
 
+### System Requirements
+PHP=8.3
+Database=SQLite
+Laravel=11.x
+
+
+
+
 ### Some screenshots
 
 <img src="./docs/dashboard.png" alt="Bemo Dashboard">

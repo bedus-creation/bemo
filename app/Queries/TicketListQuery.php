@@ -15,7 +15,7 @@ readonly class TicketListQuery
     public function getQuery(): Builder
     {
         return Ticket::query()
-            ->with('category')
+            ->with(['category', 'classification'])
             ->when($this->dto->status, function (Builder $query) {
                 $query->where('status', $this->dto->status);
             })->when($this->dto->category, function (Builder $query) {

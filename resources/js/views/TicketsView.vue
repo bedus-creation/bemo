@@ -178,7 +178,7 @@
             async fetchCategories() {
                 await useHttp().get("/api/categories", {}, {
                     onSuccess: (res) => {
-                        this.categories = res?.data || res || []
+                        this.categories = res?.data || []
                     },
                     onError: (err) => {
                         console.error("Failed to fetch categories:", err.message)
@@ -196,7 +196,6 @@
 
                 await useHttp().get(`/api/tickets?${this.queryString}`, {}, {
                     onSuccess: (res) => {
-                        console.log(res)
                         this.tickets = res.data
                         this.perPage = res.meta.per_page
                         this.totalPages = res.meta.last_page
@@ -313,7 +312,6 @@
     .tickets {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 16px;
     }
 
     .tickets__header {

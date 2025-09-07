@@ -17,10 +17,10 @@ class TicketController extends Controller
 {
     public function index(TicketListRequest $request, TicketListQuery $query)
     {
-        $page = (int) $request->input('page', 1);
-        $perPage = (int) $request->input('per_page', 10);
-        $status = $request->input('status');
-        $q = $request->input('query');
+        $page     = (int) $request->input('page', 1);
+        $perPage  = (int) $request->input('per_page', 10);
+        $status   = $request->input('status');
+        $q        = $request->input('query');
         $category = (int) $request->input('category');
 
         $ticketFilterDto = new TicketFilterDto(

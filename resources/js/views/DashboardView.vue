@@ -31,7 +31,7 @@
                     id="issues-by-category"
                     :options="chartOptions"
                     :data="chartData"
-                    :style="{ width: '100%', height: '400px', backgroundColor: 'var(--color-bg-panel)', borderRadius: '8px' }"/>
+                    :style="{ width: '100%', height: '400px', backgroundColor: 'var(--color-bg-panel)', borderRadius: '8px', padding: '1.5rem' }"/>
             </div>
         </div>
     </section>
@@ -91,7 +91,6 @@
     .dashboard {
         max-width: 900px;
         margin: 0 auto;
-        padding: 16px;
     }
 
     .dashboard__header {

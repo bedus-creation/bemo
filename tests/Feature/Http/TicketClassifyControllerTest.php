@@ -19,12 +19,12 @@ class TicketClassifyControllerTest extends TestCase
         $ticket = Ticket::factory()->create();
 
         // Act
-        $response = $this->postJson(route('api.tickets.classify.store', $ticket->id));;
+        $response = $this->postJson(route('api.tickets.classify.store', $ticket->id));
 
         // Assert response
         $response->assertStatus(202)
             ->assertExactJson([
-                'message' => 'Classification job dispatched.'
+                'message' => 'Classification job dispatched.',
             ]);
 
         // Assert a job dispatched with correct ticket id

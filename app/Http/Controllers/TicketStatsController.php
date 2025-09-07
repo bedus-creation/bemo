@@ -19,9 +19,9 @@ class TicketStatsController extends Controller
             ->pluck('aggregate', 'status');
 
         $status = [
-            'open'    => (int) ($statusRows['open'] ?? 0),
+            'open' => (int) ($statusRows['open'] ?? 0),
             'pending' => (int) ($statusRows['pending'] ?? 0),
-            'closed'  => (int) ($statusRows['closed'] ?? 0),
+            'closed' => (int) ($statusRows['closed'] ?? 0),
         ];
 
         // Category counts (dynamic keys)
@@ -30,11 +30,11 @@ class TicketStatsController extends Controller
             ->whereNotNull('ticket_category_id')
             ->groupBy('ticket_category_id')
             ->pluck('aggregate', 'ticket_category_id')
-            ->map(fn($v) => (int) $v);
+            ->map(fn ($v) => (int) $v);
 
         return response()->json([
-            'total'      => (int) $total,
-            'status'     => $status,
+            'total' => (int) $total,
+            'status' => $status,
             'categories' => $category,
         ]);
     }

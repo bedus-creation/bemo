@@ -30,13 +30,13 @@ class Ticket extends Model
         'body',
         'status',
         'ticket_category_id',
-        'note'
+        'note',
     ];
 
     public function casts(): array
     {
         return [
-            'status' => TicketStatus::class
+            'status' => TicketStatus::class,
         ];
     }
 

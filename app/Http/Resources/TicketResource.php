@@ -20,16 +20,17 @@ class TicketResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'         => $this->id,
-            'subject'    => $this->subject,
-            'body'       => $this->body,
-            'status'     => $this->status,
-            'note'       => $this->note,
+            'id' => $this->id,
+            'subject' => $this->subject,
+            'body' => $this->body,
+            'status' => $this->status->value,
+            'note' => $this->note,
+
+            'category' => TicketCategoryResource::make($this->whenLoaded('category')),
+            'classification' => TicketClassificationResource::make($this->whenLoaded('classification')),
+
             'created_at' => DateHelper::response($this->created_at),
             'updated_at' => DateHelper::response($this->updated_at),
-
-            'category'       => TicketCategoryResource::make($this->whenLoaded('category')),
-            'classification' => TicketClassificationResource::make($this->whenLoaded('classification')),
         ];
     }
 }

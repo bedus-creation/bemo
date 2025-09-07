@@ -303,6 +303,14 @@
         font-size: 12px;
     }
 
+    .link {
+        text-decoration: none;
+        background: #f0f0f0;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
     /* Reuse base controls from TicketsView */
     .button {
         background: #f0f0f0;

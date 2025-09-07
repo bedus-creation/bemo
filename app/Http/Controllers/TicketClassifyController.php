@@ -13,7 +13,7 @@ class TicketClassifyController extends Controller
         TicketClassifierJob::dispatch($ticket->id);
 
         return response()->json([
-            'message' => 'Classification job dispatched.'
+            'message' => 'Classification job dispatched.',
         ], 202);
     }
 }

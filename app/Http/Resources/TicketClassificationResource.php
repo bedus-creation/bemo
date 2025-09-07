@@ -19,9 +19,9 @@ class TicketClassificationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
+            'id' => $this->id,
             'explanation' => $this->explanation,
-            'confidence'  => $this->confidence,
+            'confidence' => $this->confidence,
 
             'category' => TicketCategoryResource::make($this->whenLoaded('category')),
         ];

@@ -9,9 +9,9 @@ class DateHelper
     public static function response(CarbonInterface $date, $format = 'Y-m-d'): array
     {
         return [
-            'raw'       => $date->timestamp,
+            'raw' => $date->timestamp,
             'formatted' => $date->format($format),
-            'diff'      => $date->diffForHumans()
+            'diff' => $date->diffForHumans(),
         ];
     }
 }

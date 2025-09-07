@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateTicketRequest extends FormRequest
+class TicketUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,13 +15,13 @@ class UpdateTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status'   => ['sometimes', 'string', 'in:open,pending,closed'],
+            'status' => ['sometimes', 'string', 'in:open,pending,closed'],
             'category' => [
                 'sometimes',
                 'nullable',
-                Rule::exists('ticket_categories', 'id')
+                Rule::exists('ticket_categories', 'id'),
             ],
-            'note'     => ['sometimes', 'nullable', 'string'],
+            'note' => ['sometimes', 'nullable', 'string'],
         ];
     }
 }

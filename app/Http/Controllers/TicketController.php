@@ -4,36 +4,39 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTicketRequest;
-use App\Http\Requests\UpdateTicketRequest;
+use App\Dtos\TicketFilterDto;
+use App\Http\Requests\TicketListRequest;
+use App\Http\Requests\TicketStoreRequest;
+use App\Http\Requests\TicketUpdateRequest;
 use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
-use Illuminate\Database\Eloquent\Builder;
+use App\Queries\TicketListQuery;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TicketController extends Controller
 {
-    public function index(Request $request)
+    public function index(TicketListRequest $request, TicketListQuery $query)
     {
-        $perPage = (int) $request->query('per_page', 10);
+        $page = (int) $request->input('page', 1);
+        $perPage = (int) $request->input('per_page', 10);
+        $status = $request->input('status');
+        $q = $request->input('query');
+        $category = (int) $request->input('category');
 
-        $results = Ticket::query()
-            ->with('category')
-            ->when($status = $request->input('status'), function (Builder $query) use ($status) {
-                $query->where('status', $status);
-            })->when($category = $request->input('category'), function (Builder $query) use ($category) {
-                $query->where('category', $category);
-            })->when($q = $request->input('query'), function (Builder $query) use ($q) {
-                $query->where('subject', 'like', "%{$q}%")
-                    ->orWhere('body', 'like', "%{$q}%");
-            })->orderByDesc('created_at')
-            ->paginate($perPage);
+        $ticketFilterDto = new TicketFilterDto(
+            status: $status,
+            category: $category,
+            q: $q
+        );
+
+        $results = (new TicketListQuery($ticketFilterDto))
+            ->getQuery()
+            ->paginate(perPage: $perPage, page: $page);
 
         return TicketResource::collection($results);
     }
 
-    public function store(StoreTicketRequest $request): JsonResponse
+    public function store(TicketStoreRequest $request): JsonResponse
     {
         $ticket = Ticket::query()->create($request->validated());
 
@@ -52,7 +55,7 @@ class TicketController extends Controller
         return new TicketResource($ticket);
     }
 
-    public function update(UpdateTicketRequest $request, Ticket $ticket): TicketResource
+    public function update(TicketUpdateRequest $request, Ticket $ticket): TicketResource
     {
         $ticket->update($request->validated());
 

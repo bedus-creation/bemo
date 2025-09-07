@@ -3,7 +3,8 @@
         <header class="tickets__header">
             <h1 class="tickets__title">Tickets</h1>
             <div class="tickets__actions">
-                <button class="button button--primary" @click="openNewTicketModal">New Ticket</button>
+                <button class="button button--primary" @click="showNewModal = true">New Ticket</button>
+                <a :href="`/api/tickets/export?${queryString}`" class="link">CSV Export</a>
             </div>
         </header>
 
@@ -86,46 +87,34 @@
             </div>
         </div>
 
-        <!-- New Ticket Modal -->
-        <div v-if="showNewModal" class="modal" @click.self="closeNewTicketModal">
-            <div class="modal__dialog">
-                <h2 class="modal__title">New Ticket</h2>
-                <form @submit.prevent="submitNewTicket">
-                    <label class="form__label">Subject
-                        <input v-model="newTicket.subject" class="input" required maxlength="255"/>
-                    </label>
-                    <label class="form__label">Body
-                        <textarea v-model="newTicket.body" class="textarea" required rows="5"></textarea>
-                    </label>
-                    <div class="modal__actions">
-                        <button type="button" class="button" @click="closeNewTicketModal">Cancel</button>
-                        <button type="submit" class="button button--primary" :disabled="savingNew">
-                            {{ savingNew ? "Saving…" : "Create" }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <TicketNewModal
+            :show="showNewModal"
+            @close="showNewModal = false"
+            @success="fetchTickets(); showNewModal = false;"/>
 
         <!-- Edit Note Modal -->
-        <TicketInternalNoteEdit
+        <TicketNoteEdit
             :show="showNoteModal"
             :ticket="editingTicket"
-            :draft="noteDraft"
             @close="closeNoteModal"
+            @success="fetchTickets(); closeNoteModal();"
         />
     </section>
 </template>
 
 <script>
-    import TicketInternalNoteEdit from "./TicketInternalNoteEdit.vue"
+    import { useHttp } from "../composables/useHttp.js"
+    import TicketNewModal from "./TicketNewModal.vue"
+    import TicketNoteEdit from "./TicketNoteEdit.vue"
     export default {
         name: "TicketsView",
         components: {
-            TicketInternalNoteEdit,
+            TicketNewModal,
+            TicketNoteEdit,
         },
         data() {
             return {
+                categories: [],
                 tickets: [],
                 loading: false,
                 error: null,
@@ -146,13 +135,8 @@
 
                 // modal states
                 showNewModal: false,
-                newTicket: { subject: "", body: "" },
-                savingNew: false,
-
                 showNoteModal: false,
                 editingTicket: null,
-                noteDraft: "",
-                savingNote: false,
             }
         },
         watch: {
@@ -162,36 +146,7 @@
             page: "fetchTickets",
         },
         computed: {
-            categories() {
-                const set = new Set()
-                this.tickets.forEach(t => { if (t.category) set.add(t.category) })
-                return Array.from(set).sort()
-            },
-        },
-        created() {
-            this.fetchCategories()
-            this.fetchTickets()
-        },
-        methods: {
-            async fetchCategories() {
-                const res = await fetch("/api/categories", {
-                    method: "GET",
-                    headers: {
-                        Accept: "application/json",
-                    },
-                })
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`)
-                }
-
-                const data = await res.json()
-                this.categories = data?.data || data || []
-            },
-            async fetchTickets() {
-                this.loading = true
-                this.error = null
-
+            queryString: function () {
                 const params = new URLSearchParams({
                     per_page: this.perPage,
                     query: this.search.trim().toLowerCase(),
@@ -200,25 +155,57 @@
                     page: this.page,
                 })
 
-                const res = await fetch(`/api/tickets?${params.toString()}`, {
-                    method: "GET",
-                    headers: {
-                        Accept: "application/json",
+                return params.toString();
+            },
+        },
+        created() {
+            this.fetchCategories()
+
+            // Improvement: package such as qs can be used to parse query params
+            // @see https://www.npmjs.com/package/qs
+            const params = new URLSearchParams(window.location.search)
+            if (params.has("query")) this.search = params.get("query")
+            if (params.has("category")) this.selectedCategory = params.get("category")
+            if (params.has("status")) this.selectedStatus = params.get("status")
+            if (params.has("page")) this.page = Number(params.get("page")) || 1
+            if (params.has("per_page")) this.perPage = Number(params.get("per_page")) || 10
+
+            this.fetchTickets()
+        },
+        methods: {
+            async fetchCategories() {
+                await useHttp().get("/api/categories", {}, {
+                    onSuccess: (res) => {
+                        this.categories = res?.data || res || []
+                    },
+                    onError: (err) => {
+                        console.error("Failed to fetch categories:", err.message)
+                        this.error = err
                     },
                 })
+            },
+            async fetchTickets() {
+                this.loading = true
+                this.error = null
 
-                if (!res.ok) {
-                    this.error = `HTTP error! status: ${res.status}`
-                    alert("Failed to fetch tickets")
-                    throw new Error(`HTTP error! status: ${res.status}`)
-                }
+                // sync query params in the browser URL
+                const newUrl = `${window.location.pathname}?${this.queryString}`
+                window.history.replaceState({}, "", newUrl)
 
-                const data = await res.json()
-
-                this.tickets = data.data
-                this.perPage = data.meta.per_page
-                this.totalPages = data.meta.total
-                this.loading = false
+                await useHttp().get(`/api/tickets?${this.queryString}`, {}, {
+                    onSuccess: (res) => {
+                        console.log(res)
+                        this.tickets = res.data
+                        this.perPage = res.meta.per_page
+                        this.totalPages = res.meta.last_page
+                    },
+                    onError: (err) => {
+                        this.error = err
+                    },
+                    onFinally: () => {
+                        this.loading = false
+                    },
+                })
             },
             applyFilters() {
                 this.page = 1
@@ -228,39 +215,7 @@
                 if (p > this.totalPages) p = this.totalPages
                 this.page = p
             },
-            openNewTicketModal() {
-                this.newTicket = { subject: "", body: "" }
-                this.savingNew = false
-                this.showNewModal = true
-            },
-            closeNewTicketModal() {
-                this.showNewModal = false
-            },
-            async submitNewTicket() {
-                if (!this.newTicket.subject || !this.newTicket.body) return;
-                this.savingNew = true;
 
-                const res = await fetch("/api/tickets", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    body: JSON.stringify(this.newTicket),
-                });
-
-                if (!res.ok) {
-                    alert("Failed to create ticket");
-                    this.savingNew = false;
-                    return;
-                }
-
-                await this.fetchTickets();
-                this.closeNewTicketModal();
-                this.applyFilters();
-
-                this.savingNew = false;
-            },
             async classifyTicket(t) {
                 if (!t || this.classifying[t.id]) return
                 this.$set ? this.$set(this.classifying, t.id, true) : (this.classifying = { ...this.classifying, [t.id]: true })
@@ -307,13 +262,11 @@
             },
             editNote(t) {
                 this.editingTicket = t
-                this.noteDraft = t.note || ""
                 this.showNoteModal = true
             },
             closeNoteModal() {
                 this.showNoteModal = false
                 this.editingTicket = null
-                this.noteDraft = ""
             },
         },
         beforeUnmount() {
@@ -362,6 +315,10 @@
         color: #2f6fed;
         text-decoration: underline;
         padding: 0 4px;
+    }
+
+    .a--link {
+        text-decoration: none;
     }
 
     .input, .select, .textarea {
@@ -421,6 +378,11 @@
     .tickets__loading, .tickets__empty {
         padding: 12px;
         color: #555;
+    }
+
+    .tickets__actions {
+        display: flex;
+        gap: 8px;
     }
 
     /***** Table *****/

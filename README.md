@@ -44,13 +44,15 @@ Serve the project
 php artisan serve
 ```
 
-### Assumptions & Trade-offs
+# Assumptions & Trade-offs
 
-1. Database design
-```shell
+### **Database Design**
+
+```
 ticket_categories:
 - id
 - name
+
 tickets:
 - id
 - subject
@@ -58,6 +60,7 @@ tickets:
 - ticket_category_id
 - note 
 - status
+
 tickets_classifications:
 - id
 - ticket_id
@@ -66,29 +69,53 @@ tickets_classifications:
 - explanation
 ```
 
-A `tickets_classifications` table has been added to store AI classification results. This allows us to reference the original AI-generated classifications at any time, even if a user later overrides the ticket’s category. The current category of a ticket continues to be stored in the ticket_category_id column of the `tickets` table.
+A `tickets_classifications` table stores AI classification results, allowing reference to original AI predictions even if a user later updates the ticket’s category. The `ticket_category_id` column in `tickets` continues to store the current category.
 
-2. **Code structure & Design Patterns**
+### **Code Structure & Design Patterns**
 
-* **MVC Pattern:** For simplicity, I’ve kept to a minimal MVC structure. In larger projects, the codebase can be organized using DDD (Domain-Driven Design) or another domain-oriented structure for better scalability.
-* **Query Object**: A simple query object class `App\Queries\TicketListQuery.php` is used to handle ticket filtering and sorting. While I generally prefer a more structured approach—such as the [repository pattern](https://github.com/andersao/l5-repository/tree/master) with criteria for filtering, transformers for response formatting, and caching for performance—I kept it minimal here by sticking to a straightforward query object for simplicity.
-3. Ticket Classification: [OpenAI’s Structured JSON Response](https://platform.openai.com/docs/guides/structured-outputs) API is used to classify tickets. Rate limiting is applied in `app/Jobs/TicketClassifierJob.php`, allowing up to 100 jobs per minute. Jobs 
-   are configured with unlimited retries if they don’t process, but in case of exceptions (e.g., OpenAI rate limit errors), retries are limited to 3 attempts.
-4. CSV Export: Core PHP functions like `fputcsv()` and `fopen()` are used to export tickets to CSV. To avoid memory issues, [Laravel’s chunkById()](https://janostlund.com/2021-12-26/eloquent-cursor-vs-chunk) method is applied for batch processing. The export has 
-   been tested with 1 million tickets and works reliably. 
-5. PHPUnit: Backend tests achieve ~100% coverage, except for a few unused classes.
-6. PHPStan: Static analysis is enforced with **PHPStan at level 5**, which provides a good balance between catching errors and managing complexity.
+- **MVC Pattern:** For simplicity, a minimal MVC structure is used. For larger projects, a domain-driven design (DDD) or similar approach could improve scalability.
+- **Query Object:** `App\Queries\TicketListQuery.php` handles ticket filtering and sorting. While I usually prefer the repository pattern with criteria, transformers, and caching, a simple query object is used here for brevity and clarity.
 
-7. Frontend
-* BEM: BEM is used for CSS naming conventions. While I usually work with TailwindCSS, I experimented with BEM here. Responsiveness and dark theme support could be improved.
-* Options API: The project uses Vue’s Options API. A simple composable (useHttp) handles network requests and API errors.
-* Live Validation (FormJS): I built a custom package (formjs) that works with Yup for real-time form validation. This package is already in use across several production projects at my company.
+### **Ticket Classification & Rate Limited**
 
-### Optimizations (Future Improvements):
-* Throttle requests for ticket search.
-* Improve component/composable structure (currently a bit difficult with Options API; mixins exist but aren’t ideal).
-* Enhance a dark theme color scheme.
-* Add proper responsiveness across devices.
+- OpenAI’s [Structured JSON Response API](https://platform.openai.com/docs/guides/structured-outputs) is used for classification.
+- Rate limiting is applied in `app/Jobs/TicketClassifierJob.php` (up to 100 jobs/minute).
+- Jobs have unlimited retries for processing failures, but exceptions like rate limit errors have a max of 3 retries.
+- Keeps the manual value in `tickets` table, and saves all the AI value including category in `ticket_classifications` table
+
+### Seeders
+
+* Have implemented factories for all the classes
+* And Tickets seeder with 30 tickets and also options to seed 1 million tickets to test large file exports.
+
+### **CSV Export**
+
+- Core PHP functions (`fputcsv()` and `fopen()`) are used.
+- Laravel’s `chunkById()` handles large datasets to avoid memory issues.
+- Tested with 1 million tickets successfully.
+
+### **PHPUnit**
+
+- Backend tests cover ~100%, excluding a few unused classes.
+
+### **PHPStan**
+
+- Static analysis enforced at **level 5**, balancing error detection with manageable complexity.
+
+### **Frontend**
+
+- **BEM:** Used for CSS naming; responsiveness and dark theme support can be improved, TailwindCss can be used to make responsive and dark theme more easily
+- **Vue Options API:** Options api used to build component, Compositions API, Composables can be good alternatives to break down components more easily.
+- **Live Validation:** A package `formjs` by myself integrated with Yup to provide real-time validation, already used in production projects.
+- **Dashboard**: Dashboard is build using ChartJs.
+- **Dark Theme**: Base variable is defined for dark theme and light theme, and all colors are defined using those CSS variables.
+
+### Optimizations (Future Improvements)
+
+- Throttle requests for ticket search.
+- Refactor components and composables for better structure (Options API currently relies on mixins).
+- Enhance dark theme colors and overall design.
+- Improve responsiveness across devices.
 
 
 ### Some screenshots

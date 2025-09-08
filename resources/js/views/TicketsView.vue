@@ -52,12 +52,17 @@
                             </td>
                             <td class="ticket-table__td">
                             <span class="badge">
-                              <span class="badge__dot" aria-hidden="true">i</span>
+                                <span v-if="t.classification"
+                                      class="badge__dot"
+                                      aria-hidden="true"
+                                      :title="t.classification.explanation || 'No explanation available'">
+                                      i
+                                </span>
                               {{ t.category?.name || "—" }}
                             </span>
                             </td>
                             <td class="ticket-table__td">
-                             <span v-if="t.classification">
+                             <span v-if="t.classification" :title="t.classification.explanation || 'No explanation available'">
                                {{ t.classification?.confidence || 0 }}
                              </span>
                                 <span v-else>—</span>

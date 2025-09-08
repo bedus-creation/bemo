@@ -40,13 +40,14 @@ class TicketStatsController extends Controller
             $data = $categories->map(function (TicketCategory $category) use ($status, $tickets) {
                 $item = $tickets->get($status->value)?->firstWhere('ticket_category_id', $category->id);
 
+                // @phpstan-ignore-next-line
                 return $item ? $item->aggregate : 0;
             })->toArray();
 
             return [
                 'label'           => ucfirst($status->value),
                 'data'            => $data,
-                'backgroundColor' => $status->color() ?? '#999',
+                'backgroundColor' => $status->color(),
             ];
         });
 

@@ -43,10 +43,10 @@ class TicketClassifierJob implements ShouldQueue
     {
         return [
             // Instead of sending unlimited requests to the API, we will limit the number of requests per minute
-            new RateLimited('openai'),
+            (new RateLimited('openai')), // Laravel 12.x support release after certain minutes
 
             // if the same ticket is being processed, don't release'
-            (new WithoutOverlapping($this->ticketId))->dontRelease(),
+             (new WithoutOverlapping($this->ticketId))->dontRelease(),
         ];
     }
 

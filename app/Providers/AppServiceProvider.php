@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('openai', function (object $job) {
-            return Limit::perMinute(100);
+            return Limit::perMinute(100, 1)->by('openai');
         });
     }
 }

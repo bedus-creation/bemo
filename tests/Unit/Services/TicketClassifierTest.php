@@ -11,8 +11,6 @@ use Tests\TestCase;
 
 class TicketClassifierTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();

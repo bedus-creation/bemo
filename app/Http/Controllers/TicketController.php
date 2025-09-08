@@ -40,6 +40,9 @@ class TicketController extends Controller
     {
         $ticket = Ticket::query()->create($request->validated());
 
+        $ticket->refresh();
+        $ticket->load(['category', 'classification', 'classification.category']);
+
         // TODO: Should we dispatch the job after the create?
         // TicketClassifierJob::dispatch($ticket->id)->afterCommit();
 
@@ -58,6 +61,9 @@ class TicketController extends Controller
     public function update(TicketUpdateRequest $request, Ticket $ticket): TicketResource
     {
         $ticket->update($request->validated());
+
+        // Eager load relations to include them in the response
+        $ticket->load(['category', 'classification', 'classification.category']);
 
         // TODO: Should we dispatch the job after the update?
         // TicketClassifierJob::dispatch($ticket->id)->afterCommit();

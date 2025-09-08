@@ -10,8 +10,6 @@ use Tests\TestCase;
 
 class TicketClassifyControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
     public function test_dispatches_classification_job_and_returns_202_json(): void
     {
         Queue::fake();
